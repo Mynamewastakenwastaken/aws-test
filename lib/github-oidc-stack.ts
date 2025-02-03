@@ -35,8 +35,43 @@ export class GithubOidcStack extends cdk.Stack {
         'dynamodb:*',
         'logs:*',
         'cloudfront:*',
+        'ssm:GetParameter',
+        'ssm:GetParameters',
+        'ssm:GetParametersByPath',
+        'kms:Decrypt',
+        'ecr:*',
+        'ec2:DescribeAvailabilityZones',
+        'ec2:DescribeVpcs',
+        'ec2:DescribeSubnets',
+        'ec2:DescribeSecurityGroups',
+        'route53:ListHostedZones',
+        'route53:ListResourceRecordSets',
+        'sts:AssumeRole'
       ],
       resources: ['*'],
+    }));
+
+    // Add specific permissions for CDK bootstrap bucket
+    role.addToPolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [
+        's3:*'
+      ],
+      resources: [
+        `arn:aws:s3:::cdk-*-assets-${this.account}-${this.region}`,
+        `arn:aws:s3:::cdk-*-assets-${this.account}-${this.region}/*`
+      ],
+    }));
+
+    // Add permissions for CloudFormation execution role
+    role.addToPolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [
+        'iam:PassRole'
+      ],
+      resources: [
+        `arn:aws:iam::${this.account}:role/cdk-*`
+      ],
     }));
 
     // Output the role ARN
