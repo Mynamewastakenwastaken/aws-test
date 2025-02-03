@@ -18,7 +18,7 @@ const env = {
 // Create GitHub OIDC stack for CI/CD
 const githubOidcStack = new GithubOidcStack(app, 'GithubOidcStack', { env });
 
-// Create CloudWatch setup stack
+// Create CloudWatch setup stack (must be deployed before API stack)
 const cloudwatchStack = new CloudWatchSetupStack(app, 'CloudWatchSetupStack', { env });
 
 // Create application stacks
@@ -27,4 +27,8 @@ const apiStack = new ApiStack(app, 'ApiStack', {
   env,
   table: dynamoStack.table
 });
+
+// Add dependency to ensure CloudWatch setup is done before API deployment
+apiStack.addDependency(cloudwatchStack);
+
 const frontendStack = new FrontendStack(app, 'FrontendStack', { env });

@@ -6,36 +6,24 @@ export class CloudWatchSetupStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    // Create the CloudWatch Logs service role
-    const logsRole = new iam.Role(this, 'CloudWatchLogsRole', {
+    // Create the CloudWatch role for API Gateway
+    const role = new iam.Role(this, 'ApiGatewayCloudWatchRole', {
       assumedBy: new iam.ServicePrincipal('apigateway.amazonaws.com'),
-      roleName: 'APIGatewayCloudWatchLogsRole',
       managedPolicies: [
-        iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AmazonAPIGatewayPushToCloudWatchLogs')
-      ]
+        iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AmazonAPIGatewayPushToCloudWatchLogs'),
+      ],
+      roleName: 'APIGatewayCloudWatchRole',
     });
 
-    // Create a custom resource to update the API Gateway account settings
-    const updateAccountSettings = new cdk.CustomResource(this, 'UpdateAPIGatewayAccountSettings', {
-      serviceToken: cdk.CustomResourceProvider.getOrCreate(this, 'CustomResourceProvider', {
-        codeDirectory: cdk.FileSystem.tmpdir,
-        runtime: cdk.CustomResourceProviderRuntime.NODEJS_18_X,
-        policyStatements: [{
-          Effect: 'Allow',
-          Action: ['apigateway:PATCH', 'apigateway:GET'],
-          Resource: `arn:aws:apigateway:${this.region}::/account`
-        }],
-        timeout: cdk.Duration.minutes(5)
-      }),
-      properties: {
-        CloudWatchRoleArn: logsRole.roleArn
-      }
+    // Update API Gateway account settings to use this role
+    const apiGatewayAccount = new cdk.aws_apigateway.CfnAccount(this, 'ApiGatewayAccount', {
+      cloudWatchRoleArn: role.roleArn,
     });
 
     // Output the role ARN
-    new cdk.CfnOutput(this, 'CloudWatchLogsRoleArn', {
-      value: logsRole.roleArn,
-      description: 'ARN of the CloudWatch Logs role for API Gateway'
+    new cdk.CfnOutput(this, 'CloudWatchRoleArn', {
+      value: role.roleArn,
+      description: 'ARN of the CloudWatch role for API Gateway',
     });
   }
 }

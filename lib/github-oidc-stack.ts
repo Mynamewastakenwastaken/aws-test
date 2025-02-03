@@ -1,21 +1,14 @@
 import * as cdk from 'aws-cdk-lib';
 import * as iam from 'aws-cdk-lib/aws-iam';
-import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
 import { Construct } from 'constructs';
 
 export class GithubOidcStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    // Create the OIDC Provider for GitHub
-    const provider = new iam.OpenIdConnectProvider(this, 'GithubProvider', {
-      url: 'https://token.actions.githubusercontent.com',
-      clientIds: ['sts.amazonaws.com'],
-    });
-
     // Create a role that can be assumed by GitHub Actions
     const role = new iam.Role(this, 'GithubActionsRole', {
-      assumedBy: new iam.WebIdentityPrincipal(provider.openIdConnectProviderArn, {
+      assumedBy: new iam.WebIdentityPrincipal('arn:aws:iam::031986729456:oidc-provider/token.actions.githubusercontent.com', {
         StringLike: {
           'token.actions.githubusercontent.com:sub': 'repo:*',
         },
@@ -36,47 +29,8 @@ export class GithubOidcStack extends cdk.Stack {
         'dynamodb:*',
         'logs:*',
         'cloudfront:*',
-        'ssm:GetParameter',
-        'ssm:GetParameters',
-        'ssm:GetParametersByPath',
-        'kms:Decrypt',
-        'ecr:*',
-        'ec2:DescribeAvailabilityZones',
-        'ec2:DescribeVpcs',
-        'ec2:DescribeSubnets',
-        'ec2:DescribeSecurityGroups',
-        'route53:ListHostedZones',
-        'route53:ListResourceRecordSets',
-        'sts:AssumeRole',
-        'cloudwatch:GetMetricStatistics',
-        'cloudwatch:GetMetricData',
-        'apigateway:GET',
-        'apigateway:PATCH'
       ],
       resources: ['*'],
-    }));
-
-    // Add specific permissions for CDK bootstrap bucket
-    role.addToPolicy(new iam.PolicyStatement({
-      effect: iam.Effect.ALLOW,
-      actions: [
-        's3:*'
-      ],
-      resources: [
-        `arn:aws:s3:::cdk-*-assets-${this.account}-${this.region}`,
-        `arn:aws:s3:::cdk-*-assets-${this.account}-${this.region}/*`
-      ],
-    }));
-
-    // Add permissions for CloudFormation execution role
-    role.addToPolicy(new iam.PolicyStatement({
-      effect: iam.Effect.ALLOW,
-      actions: [
-        'iam:PassRole'
-      ],
-      resources: [
-        `arn:aws:iam::${this.account}:role/cdk-*`
-      ],
     }));
 
     // Output the role ARN
