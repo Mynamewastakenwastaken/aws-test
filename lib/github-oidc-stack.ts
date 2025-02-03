@@ -1,5 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
 import { Construct } from 'constructs';
 
 export class GithubOidcStack extends cdk.Stack {
@@ -46,7 +47,11 @@ export class GithubOidcStack extends cdk.Stack {
         'ec2:DescribeSecurityGroups',
         'route53:ListHostedZones',
         'route53:ListResourceRecordSets',
-        'sts:AssumeRole'
+        'sts:AssumeRole',
+        'cloudwatch:GetMetricStatistics',
+        'cloudwatch:GetMetricData',
+        'apigateway:GET',
+        'apigateway:PATCH'
       ],
       resources: ['*'],
     }));

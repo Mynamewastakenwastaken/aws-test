@@ -5,6 +5,7 @@ import { DynamoDBStack } from '../lib/dynamo';
 import { ApiStack } from '../lib/api';
 import { FrontendStack } from '../lib/frontend-stack';
 import { GithubOidcStack } from '../lib/github-oidc-stack';
+import { CloudWatchSetupStack } from '../lib/cloudwatch-setup-stack';
 
 const app = new cdk.App();
 
@@ -16,6 +17,9 @@ const env = {
 
 // Create GitHub OIDC stack for CI/CD
 const githubOidcStack = new GithubOidcStack(app, 'GithubOidcStack', { env });
+
+// Create CloudWatch setup stack
+const cloudwatchStack = new CloudWatchSetupStack(app, 'CloudWatchSetupStack', { env });
 
 // Create application stacks
 const dynamoStack = new DynamoDBStack(app, 'DynamoDBStack', { env });
